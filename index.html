@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rebuilt Scouting (Offline)</title>
+  <style>
+    :root { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0f19; color: #e8eefc; }
+    header { padding: 14px 14px 10px; border-bottom: 1px solid rgba(255,255,255,0.10); position: sticky; top: 0; background: #0b0f19; z-index: 5;}
+    h1 { font-size: 16px; margin: 0 0 6px; }
+    .sub { font-size: 12px; opacity: 0.75; }
+    main { padding: 12px; max-width: 980px; margin: 0 auto; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px; }
+    label { display: block; font-size: 12px; opacity: 0.9; margin: 8px 0 4px; }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.25);
+      color: #e8eefc;
+      outline: none;
+      font-size: 14px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.10);
+      color: #e8eefc;
+      font-size: 14px;
+    }
+    button.primary { background: #2b6cff; border-color: rgba(255,255,255,0.20); }
+    button.danger { background: rgba(255,80,80,0.25); }
+    button:active { transform: translateY(1px); }
+    .small { font-size: 12px; opacity: 0.8; }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      padding: 8px 6px;
+      vertical-align: top;
+    }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.10); font-size: 12px; }
+    .muted { opacity: 0.8; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0f19">
+</head>
+<body>
+<header>
+  <h1>Rebuilt Scouting (Offline)</h1>
+  <div class="sub">Stores locally on this iPad • Export/Import CSV to merge into a central spreadsheet later</div>
+</header>
+
+<main class="grid">
+  <section class="card">
+    <h2>New Observation</h2>
+
+    <div class="row">
+      <div>
+        <label>Scout Name</label>
+        <input id="scoutName" placeholder="e.g., Alex" />
+      </div>
+      <div>
+        <label>Event / Session</label>
+        <input id="eventName" placeholder="e.g., Week 0 Scrimmage" />
+      </div>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Match #</label>
+        <input id="matchNum" inputmode="numeric" placeholder="e.g., 12" />
+      </div>
+      <div>
+        <label>Robot Team #</label>
+        <input id="teamNum" inputmode="numeric" placeholder="e.g., 6328" />
+      </div>
+      <div>
+        <label>Alliance</label>
+        <select id="alliance">
+          <option value="Red">Red</option>
+          <option value="Blue">Blue</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:12px;">Auto</h2>
+    <div class="row3">
+      <div>
+        <label>Auto Fuel Scored</label>
+        <input id="autoFuel" inputmode="numeric" placeholder="0" />
+      </div>
+      <div>
+        <label>Won Auto? (fuel only)</label>
+        <select id="autoWin">
+          <option value="Unknown">Unknown</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+          <option value="Tied">Tied</option>
+        </select>
+      </div>
+      <div>
+        <label>Auto End Position</label>
+        <select id="autoEndPos">
+          <option value="NZ">Neutral Zone</option>
+          <option value="Near Tower/Hub">Near Tower/Hub</option>
+          <option value="Alliance Zone">Alliance Zone</option>
+          <option value="Other/Unknown">Other/Unknown</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Auto Low Climb Attempt?</label>
+        <select id="autoClimbAttempt">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div>
+        <label>Auto Low Climb Success?</label>
+        <select id="autoClimbSuccess">
+          <option value="N/A">N/A</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div>
+        <label>Teleop Start Penalty (after auto)?</label>
+        <select id="teleopStartPenalty">
+          <option value="None">None</option>
+          <option value="Small (1-3s)">Small (1-3s)</option>
+          <option value="Medium (4-6s)">Medium (4-6s)</option>
+          <option value="Large (7s+)">Large (7s+)</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:12px;">Active Window Efficiency</h2>
+    <div class="row3">
+      <div>
+        <label>Cycles / Active (avg)</label>
+        <select id="cyclesPerActive">
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5+">5+</option>
+        </select>
+      </div>
+      <div>
+        <label>Time to First Score in Active</label>
+        <select id="tFirstScore">
+          <option value="0-3s">0-3s</option>
+          <option value="4-7s">4-7s</option>
+          <option value="8-12s">8-12s</option>
+          <option value="13s+">13s+</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+      <div>
+        <label>Defense Sensitivity</label>
+        <select id="defenseSensitivity">
+          <option value="Unknown">Unknown</option>
+          <option value="Low (stable)">Low (stable)</option>
+          <option value="Medium">Medium</option>
+          <option value="High (collapses)">High (collapses)</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:12px;">Endgame</h2>
+    <div class="row3">
+      <div>
+        <label>Climb Level</label>
+        <select id="climbLevel">
+          <option value="None">None</option>
+          <option value="Low">Low</option>
+          <option value="Mid">Mid</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div>
+        <label>Climb Success?</label>
+        <select id="climbSuccess">
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </div>
+      <div>
+        <label>Climb Start Timing</label>
+        <select id="climbStart">
+          <option value="Early (>=0:30)">Early (>=0:30)</option>
+          <option value="On-time (~0:20)">On-time (~0:20)</option>
+          <option value="Late (<=0:15)">Late (<=0:15)</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:12px;">Qualitative (1–5)</h2>
+    <div class="row3">
+      <div>
+        <label>Tempo Awareness</label>
+        <select id="tempoRating">
+          <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+      </div>
+      <div>
+        <label>Composure Under Pressure</label>
+        <select id="composureRating">
+          <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+      </div>
+      <div>
+        <label>Drive/Mechanism Cleanliness</label>
+        <select id="cleanlinessRating">
+          <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Notes (quick observations, failure modes, “why”)</label>
+    <textarea id="notes" placeholder="Examples: ‘wins auto often’; ‘takes 8-12s to first score’; ‘late climb panic once’; ‘good NZ positioning during inactive’"></textarea>
+
+    <div class="btnrow" style="margin-top:10px;">
+      <button class="primary" id="saveBtn">Save Observation</button>
+      <button id="clearBtn">Clear Form</button>
+    </div>
+    <div class="small" style="margin-top:8px;">
+      Tip: You can “Add to Home Screen” on iPad Safari to make this feel like an app.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Saved Observations</h2>
+    <div class="btnrow" style="margin-bottom:10px;">
+      <button id="exportBtn">Export CSV</button>
+      <button id="copyCsvBtn">Copy CSV to Clipboard</button>
+      <button id="importBtn">Import CSV (Merge)</button>
+      <button class="danger" id="deleteAllBtn">Delete All (This iPad)</button>
+    </div>
+
+    <div class="small muted">
+      Offline workflow: each iPad exports CSV → AirDrop/email later → import into master spreadsheet (Google Sheets/Excel).
+    </div>
+
+    <div style="margin-top:10px; overflow:auto; max-height: 55vh;">
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Match</th>
+            <th>Team</th>
+            <th>Auto</th>
+            <th>Active</th>
+            <th>Endgame</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="small" style="margin-top:10px;">
+      Storage is local to this browser. If you delete Safari data, you delete this app’s data. Export often.
+    </div>
+  </section>
+</main>
+
+<input type="file" id="fileInput" accept=".csv,text/csv" style="display:none" />
+
+<script>
+  // --- Storage ---
+  const STORAGE_KEY = "rebuilt_scout_v1";
+  /** @type {Array<any>} */
+  let records = [];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      records = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      records = [];
+    }
+    render();
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    render();
+  }
+
+  function uid() {
+    // reasonably unique offline key
+    return (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)).toUpperCase();
+  }
+
+  // --- Form helpers ---
+  function v(id) { return document.getElementById(id).value.trim(); }
+  function setv(id, val) { document.getElementById(id).value = val; }
+
+  function clearForm() {
+    // keep scout/event for speed
+    ["matchNum","teamNum","autoFuel","notes"].forEach(id => setv(id, ""));
+    ["alliance","autoWin","autoEndPos","autoClimbAttempt","autoClimbSuccess","teleopStartPenalty",
+     "cyclesPerActive","tFirstScore","defenseSensitivity","climbLevel","climbSuccess","climbStart",
+     "tempoRating","composureRating","cleanlinessRating"].forEach(id => {
+      // leave defaults by reloading the page state? We'll set some reasonable defaults.
+    });
+    setv("alliance","Red");
+    setv("autoWin","Unknown");
+    setv("autoEndPos","NZ");
+    setv("autoClimbAttempt","No");
+    setv("autoClimbSuccess","N/A");
+    setv("teleopStartPenalty","None");
+    setv("cyclesPerActive","2");
+    setv("tFirstScore","4-7s");
+    setv("defenseSensitivity","Unknown");
+    setv("climbLevel","None");
+    setv("climbSuccess","N/A");
+    setv("climbStart","Unknown");
+    setv("tempoRating","3");
+    setv("composureRating","3");
+    setv("cleanlinessRating","3");
+    document.getElementById("notes").focus();
+  }
+
+  function validate() {
+    const matchNum = v("matchNum");
+    const teamNum = v("teamNum");
+    if (!matchNum || !teamNum) return "Match # and Team # are required.";
+    if (!/^\d+$/.test(matchNum)) return "Match # must be a number.";
+    if (!/^\d+$/.test(teamNum)) return "Team # must be a number.";
+    return null;
+  }
+
+  // --- Save ---
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const err = validate();
+    if (err) { alert(err); return; }
+
+    const rec = {
+      key: uid(),
+      ts: new Date().toISOString(),
+      scoutName: v("scoutName"),
+      eventName: v("eventName"),
+      matchNum: Number(v("matchNum")),
+      teamNum: Number(v("teamNum")),
+      alliance: v("alliance"),
+
+      autoFuel: Number(v("autoFuel") || "0"),
+      autoWin: v("autoWin"),
+      autoEndPos: v("autoEndPos"),
+      autoClimbAttempt: v("autoClimbAttempt"),
+      autoClimbSuccess: v("autoClimbSuccess"),
+      teleopStartPenalty: v("teleopStartPenalty"),
+
+      cyclesPerActive: v("cyclesPerActive"),
+      tFirstScore: v("tFirstScore"),
+      defenseSensitivity: v("defenseSensitivity"),
+
+      climbLevel: v("climbLevel"),
+      climbSuccess: v("climbSuccess"),
+      climbStart: v("climbStart"),
+
+      tempoRating: Number(v("tempoRating")),
+      composureRating: Number(v("composureRating")),
+      cleanlinessRating: Number(v("cleanlinessRating")),
+
+      notes: v("notes"),
+    };
+
+    records.unshift(rec);
+    persist();
+    clearForm();
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", clearForm);
+
+  // --- Render ---
+  function render() {
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    for (const r of records.slice(0, 200)) {
+      const tr = document.createElement("tr");
+
+      const autoStr = `${r.autoFuel} fuel, win:${r.autoWin}<br><span class="muted">${r.autoEndPos}${r.autoClimbAttempt==="Yes" ? ` • autoClimb:${r.autoClimbSuccess}` : ""}</span>`;
+      const activeStr = `${r.cyclesPerActive} cyc/active<br><span class="muted">first:${r.tFirstScore} • def:${r.defenseSensitivity}</span>`;
+      const endStr = `${r.climbLevel} • ${r.climbSuccess}<br><span class="muted">start:${r.climbStart}</span>`;
+
+      tr.innerHTML = `
+        <td class="mono">${r.key}</td>
+        <td>${r.matchNum}<br><span class="pill">${r.alliance}</span></td>
+        <td>${r.teamNum}</td>
+        <td>${autoStr}</td>
+        <td>${activeStr}</td>
+        <td>${endStr}</td>
+        <td>${escapeHtml((r.notes||"").slice(0,120))}${(r.notes||"").length>120?"…":""}</td>
+        <td><button data-del="${r.key}">Del</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll("button[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.getAttribute("data-del");
+        records = records.filter(x => x.key !== k);
+        persist();
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  // --- CSV ---
+  const CSV_HEADERS = [
+    "key","ts","scoutName","eventName","matchNum","teamNum","alliance",
+    "autoFuel","autoWin","autoEndPos","autoClimbAttempt","autoClimbSuccess","teleopStartPenalty",
+    "cyclesPerActive","tFirstScore","defenseSensitivity",
+    "climbLevel","climbSuccess","climbStart",
+    "tempoRating","composureRating","cleanlinessRating",
+    "notes"
+  ];
+
+  function toCsvValue(val) {
+    const s = (val === null || val === undefined) ? "" : String(val);
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+    return s;
+  }
+
+  function exportCSVText() {
+    const lines = [];
+    lines.push(CSV_HEADERS.join(","));
+    for (const r of records) {
+      const row = CSV_HEADERS.map(h => toCsvValue(r[h]));
+      lines.push(row.join(","));
+    }
+    return lines.join("\n");
+  }
+
+  function download(filename, text) {
+    const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const name = (v("eventName") || "rebuilt").replace(/[^\w\-]+/g,"_").slice(0,40);
+    download(`${name}_scouting_${new Date().toISOString().slice(0,10)}.csv`, exportCSVText());
+  });
+
+  document.getElementById("copyCsvBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(exportCSVText());
+      alert("CSV copied to clipboard. Paste into Notes/Sheets later.");
+    } catch (e) {
+      alert("Clipboard copy failed (iOS permissions). Use Export CSV instead.");
+    }
+  });
+
+  // --- Import (merge) ---
+  document.getElementById("importBtn").addEventListener("click", () => {
+    document.getElementById("fileInput").click();
+  });
+
+  document.getElementById("fileInput").addEventListener("change", async (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const imported = parseCSV(text);
+    if (!imported.length) { alert("No records found."); return; }
+
+    // Merge by unique key
+    const existingKeys = new Set(records.map(r => r.key));
+    let added = 0;
+    for (const r of imported) {
+      if (!r.key || existingKeys.has(r.key)) continue;
+      records.push(r);
+      existingKeys.add(r.key);
+      added++;
+    }
+    // newest first
+    records.sort((a,b) => (a.ts < b.ts ? 1 : -1));
+    persist();
+    alert(`Imported ${imported.length} rows, added ${added} new.`);
+    ev.target.value = "";
+  });
+
+  function parseCSV(text) {
+    // Minimal CSV parser handling quotes, commas, newlines
+    const rows = [];
+    let i = 0, field = "", row = [], inQuotes = false;
+
+    function pushField() { row.push(field); field = ""; }
+    function pushRow() { rows.push(row); row = []; }
+
+    while (i < text.length) {
+      const ch = text[i];
+
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        } else {
+          field += ch; i++; continue;
+        }
+      } else {
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === ",") { pushField(); i++; continue; }
+        if (ch === "\n") { pushField(); pushRow(); i++; continue; }
+        if (ch === "\r") { i++; continue; }
+        field += ch; i++; continue;
+      }
+    }
+    // last field/row
+    pushField();
+    if (row.length > 1 || row[0] !== "") pushRow();
+
+    if (!rows.length) return [];
+
+    const headers = rows[0].map(h => h.trim());
+    const out = [];
+    for (const r of rows.slice(1)) {
+      const obj = {};
+      for (let c = 0; c < headers.length; c++) {
+        obj[headers[c]] = r[c] ?? "";
+      }
+      // normalize types for known fields
+      obj.matchNum = Number(obj.matchNum || "0");
+      obj.teamNum = Number(obj.teamNum || "0");
+      obj.autoFuel = Number(obj.autoFuel || "0");
+      obj.tempoRating = Number(obj.tempoRating || "0");
+      obj.composureRating = Number(obj.composureRating || "0");
+      obj.cleanlinessRating = Number(obj.cleanlinessRating || "0");
+      out.push(obj);
+    }
+    return out;
+  }
+
+  // --- Delete all ---
+  document.getElementById("deleteAllBtn").addEventListener("click", () => {
+    if (!confirm("Delete ALL scouting data on this iPad? (Export first!)")) return;
+    records = [];
+    persist();
+  });
+
+  // Init
+  load();
+  clearForm();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+</script>
+
+</body>
+</html>
