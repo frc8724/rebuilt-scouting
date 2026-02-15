@@ -1,932 +1,218 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rebuilt Scouting (Offline)</title>
-  <style>
-    :root { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #0b0f19; color: #e8eefc; }
-    header {
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      position: sticky; top: 0; background: #0b0f19; z-index: 5;
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    }
-    h1 { font-size: 16px; margin: 0 0 6px; }
-    .sub { font-size: 12px; opacity: 0.75; }
-    main { padding: 12px; max-width: 980px; margin: 0 auto; }
-
-    .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
-
-    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 12px; }
-    .card h2 { font-size: 14px; margin: 0 0 8px; }
-    .muted { opacity: 0.8; }
-    .small { font-size: 12px; opacity: 0.85; }
-
-    label { display: block; font-size: 12px; opacity: 0.9; margin: 10px 0 4px; }
-    input, select, textarea {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(0,0,0,0.25);
-      color: #e8eefc;
-      outline: none;
-      font-size: 16px; /* iOS: prevents zoom */
-    }
-    textarea { min-height: 80px; resize: vertical; }
-
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-    @media (max-width: 520px) {
-      .row, .row3 { grid-template-columns: 1fr; }
-    }
-
-    .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    button {
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.10);
-      color: #e8eefc;
-      font-size: 16px;
-    }
-    button.primary { background: #2b6cff; border-color: rgba(255,255,255,0.20); }
-    button.danger { background: rgba(255,80,80,0.25); }
-    button:active { transform: translateY(1px); }
-
-    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.10); font-size: 12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-
-    .stepbar { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-    .dot { width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.18); }
-    .dot.on { background: #2b6cff; }
-    .stepname { font-size: 12px; opacity: 0.85; margin-left: 6px; }
-
-    .table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .table th, .table td { border-bottom: 1px solid rgba(255,255,255,0.10); padding: 8px 6px; vertical-align: top; }
-    .hidden { display: none !important; }
-
-    /* Big tap selector buttons (optional) */
-    .seg { display:flex; gap:8px; flex-wrap:wrap; }
-    .seg button { flex: 1 1 auto; min-width: 120px; }
-    .seg button.on { background: rgba(43,108,255,0.35); border-color: rgba(255,255,255,0.30); }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rebuilt Scouting</title>
+<style>
+body { font-family: -apple-system, system-ui; background:#0b0f19; color:#e8eefc; margin:0; padding:12px;}
+.card { background:rgba(255,255,255,0.06); padding:14px; border-radius:12px; margin-bottom:12px;}
+h2 { margin-top:0;}
+button { padding:12px; margin:4px; border-radius:10px; border:none; font-size:16px;}
+.primary { background:#2b6cff; color:white;}
+.counter { font-size:32px; margin:10px 0;}
+.hidden { display:none;}
+select, input, textarea { width:100%; padding:10px; margin:4px 0; border-radius:8px; font-size:16px;}
+textarea { min-height:70px;}
+.small { font-size:13px; opacity:0.8;}
+</style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>Rebuilt Scouting (Offline)</h1>
-    <div class="sub">Chronological entry • Offline storage • Export/Import CSV</div>
-  </div>
-  <div class="stepbar" id="stepbar"></div>
-</header>
 
-<main class="grid">
-  <!-- Wizard / Match entry -->
-  <section class="card">
-    <h2 id="stepTitle">Setup</h2>
-    <div class="small muted" id="stepHint">Enter match + team once. Then follow phases in order.</div>
+<div class="card" id="setup">
+<h2>Setup</h2>
+<input id="match" placeholder="Match #">
+<input id="team" placeholder="Team #">
+<select id="alliance">
+<option>Red</option>
+<option>Blue</option>
+</select>
+<button class="primary" onclick="nextStep('auto')">Start → Auto</button>
+</div>
 
-    <!-- STEP 0: Setup -->
-    <div class="step" id="step-setup">
-      <div class="row">
-        <div>
-          <label>Scout Name</label>
-          <input id="scoutName" placeholder="e.g., Alex" />
-        </div>
-        <div>
-          <label>Event / Session</label>
-          <input id="eventName" placeholder="e.g., Week 0 Scrimmage" />
-        </div>
-      </div>
+<div class="card hidden" id="auto">
+<h2>Auto</h2>
+<div>Fuel</div>
+<div class="counter" id="autoFuel">0</div>
+<button onclick="addFuel('autoFuel',5)">+5</button>
+<button onclick="addFuel('autoFuel',1)">+1</button>
+<button onclick="addFuel('autoFuel',-1)">-1</button>
 
-      <div class="row3">
-        <div>
-          <label>Match #</label>
-          <input id="matchNum" inputmode="numeric" placeholder="e.g., 12" />
-        </div>
-        <div>
-          <label>Robot Team #</label>
-          <input id="teamNum" inputmode="numeric" placeholder="e.g., 6328" />
-        </div>
-        <div>
-          <label>Alliance</label>
-          <select id="alliance">
-            <option value="Red">Red</option>
-            <option value="Blue">Blue</option>
-          </select>
-        </div>
-      </div>
+<select id="autoWin">
+<option>Won Auto</option>
+<option>Lost Auto</option>
+<option>Tied</option>
+</select>
 
-      <div class="btnrow">
-        <button class="primary" id="startMatchBtn">Start → Auto</button>
-        <button id="resetDraftBtn">Reset This Entry</button>
-      </div>
-      <div class="small muted">Tip: “Add to Home Screen” in Safari so it feels like an app.</div>
-    </div>
+<select id="autoClimb">
+<option>No Auto Climb</option>
+<option>Low Climb</option>
+</select>
 
-    <!-- STEP 1: Auto -->
-    <div class="step hidden" id="step-auto">
-      <div class="row3">
-        <div>
-          <label>Auto Fuel Scored</label>
-          <input id="autoFuel" inputmode="numeric" placeholder="0" />
-        </div>
-        <div>
-          <label>Won Auto? (fuel only)</label>
-          <select id="autoWin">
-            <option value="Unknown">Unknown</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-            <option value="Tied">Tied</option>
-          </select>
-        </div>
-        <div>
-          <label>Auto End Position</label>
-          <select id="autoEndPos">
-            <option value="NZ">Neutral Zone</option>
-            <option value="Near Hub">Near Hub</option>
-            <option value="Near Tower">Near Tower</option>
-            <option value="Alliance Zone">Alliance Zone</option>
-            <option value="Other/Unknown">Other/Unknown</option>
-          </select>
-        </div>
-      </div>
+<button class="primary" onclick="nextStep('active1')">Next → Active 1</button>
+</div>
 
-      <div class="row3">
-        <div>
-          <label>Auto Low Climb Attempt?</label>
-          <select id="autoClimbAttempt">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-        </div>
-        <div>
-          <label>Auto Low Climb Success?</label>
-          <select id="autoClimbSuccess">
-            <option value="N/A">N/A</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label>Teleop Start Delay (after auto)</label>
-          <select id="teleopStartPenalty">
-            <option value="None">None</option>
-            <option value="Small (1-3s)">Small (1-3s)</option>
-            <option value="Medium (4-6s)">Medium (4-6s)</option>
-            <option value="Large (7s+)">Large (7s+)</option>
-          </select>
-        </div>
-      </div>
+<div class="card hidden" id="active1">
+<h2>Active 1</h2>
+<div>Fuel</div>
+<div class="counter" id="a1Fuel">0</div>
+<button onclick="addFuel('a1Fuel',5)">+5</button>
+<button onclick="addFuel('a1Fuel',1)">+1</button>
+<button onclick="addFuel('a1Fuel',-1)">-1</button>
 
-      <div class="btnrow">
-        <button id="backToSetupBtn">← Back</button>
-        <button class="primary" id="toActive1Btn">Next → Active 1</button>
-      </div>
-    </div>
+<div>Cycles</div>
+<div class="counter" id="a1Cycles">0</div>
+<button onclick="addFuel('a1Cycles',1)">+1 Cycle</button>
+<button onclick="addFuel('a1Cycles',-1)">-1 Cycle</button>
 
-    <!-- STEP 2: Active 1 -->
-    <div class="step hidden" id="step-active1">
-      <div class="row3">
-        <div>
-          <label>Cycles Completed (Active 1)</label>
-          <select id="a1Cycles">
-            <option value="0">0</option><option value="1">1</option><option value="2" selected>2</option>
-            <option value="3">3</option><option value="4">4</option><option value="5+">5+</option>
-          </select>
-        </div>
-        <div>
-          <label>Fuel Scored (Active 1)</label>
-          <input id="a1Fuel" inputmode="numeric" placeholder="0" />
-        </div>
-        <div>
-          <label>Time to First Score (Active 1)</label>
-          <select id="a1First">
-            <option value="0-3s">&lt;3s</option>
-            <option value="4-7s" selected>4-7s</option>
-            <option value="8-12s">8-12s</option>
-            <option value="13s+">13s+</option>
-            <option value="None">None</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-      </div>
+<button class="primary" onclick="nextStep('inactive1',true)">Next → Inactive 1</button>
+</div>
 
-      <div class="btnrow">
-        <button id="backToAutoBtn">← Back</button>
-        <button class="primary" id="toInactive1Btn">Next → Inactive 1</button>
-      </div>
-    </div>
+<div class="card hidden" id="inactive1">
+<h2>Inactive 1</h2>
 
-    <!-- STEP 3: Inactive 1 -->
-    <div class="step hidden" id="step-inactive1">
-      <div class="row3">
-        <div>
-          <label>Positioned for Next Active?</label>
-          <select id="i1Pos">
-            <option value="Unknown">Unknown</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label>Hoarding / Corralling Impact</label>
-          <select id="i1Hoard">
-            <option value="Unknown">Unknown</option>
-            <option value="None">None</option>
-            <option value="Some">Some</option>
-            <option value="Significant">Significant</option>
-          </select>
-        </div>
-        <div>
-          <label>Lane Interference (during opp active)</label>
-          <select id="i1Lane">
-            <option value="Unknown">Unknown</option>
-            <option value="None">None</option>
-            <option value="Minor">Minor</option>
-            <option value="Major">Major</option>
-          </select>
-        </div>
-      </div>
+<select id="i1Action">
+<option>Hoarded</option>
+<option>Defense</option>
+<option>Both</option>
+<option>Neither</option>
+<option>Other</option>
+</select>
 
-      <div class="btnrow">
-        <button id="backToActive1Btn">← Back</button>
-        <button class="primary" id="toActive2Btn">Next → Active 2</button>
-      </div>
-    </div>
+<select id="i1Position">
+<option>Ended AZ</option>
+<option>Ended NZ</option>
+<option>Other</option>
+</select>
 
-    <!-- STEP 4: Active 2 -->
-    <div class="step hidden" id="step-active2">
-      <div class="row3">
-        <div>
-          <label>Cycles Completed (Active 2)</label>
-          <select id="a2Cycles">
-            <option value="0">0</option><option value="1">1</option><option value="2" selected>2</option>
-            <option value="3">3</option><option value="4">4</option><option value="5+">5+</option>
-          </select>
-        </div>
-        <div>
-          <label>Fuel Scored (Active 2)</label>
-          <input id="a2Fuel" inputmode="numeric" placeholder="0" />
-        </div>
-        <div>
-          <label>Time to First Score (Active 2)</label>
-          <select id="a2First">
-            <option value="0-3s">&lt;3s</option>
-            <option value="4-7s" selected>4-7s</option>
-            <option value="8-12s">8-12s</option>
-            <option value="13s+">13s+</option>
-            <option value="None">None</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-      </div>
+<select id="i1Ready">
+<option>Ready to Shoot</option>
+<option>Not Ready</option>
+<option>Unknown</option>
+</select>
 
-      <div class="row3">
-        <div>
-          <label>Faced Heavy Defense?</label>
-          <select id="defFaced">
-            <option value="Unknown">Unknown</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label>Throughput Drop Under Defense</label>
-          <select id="defDrop">
-            <option value="Unknown">Unknown</option>
-            <option value="None">None</option>
-            <option value="Small">Small</option>
-            <option value="Major">Major</option>
-          </select>
-        </div>
-        <div>
-          <label>Overall Tempo Awareness (1–5)</label>
-          <select id="tempoRating">
-            <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-          </select>
-        </div>
-      </div>
+<button class="primary" onclick="nextStep('active2')">Next → Active 2</button>
+</div>
 
-      <div class="btnrow">
-        <button id="backToInactive1Btn">← Back</button>
-        <button class="primary" id="toInactive2Btn">Next → Inactive 2</button>
-      </div>
-    </div>
+<div class="card hidden" id="active2">
+<h2>Active 2</h2>
+<div>Fuel</div>
+<div class="counter" id="a2Fuel">0</div>
+<button onclick="addFuel('a2Fuel',5)">+5</button>
+<button onclick="addFuel('a2Fuel',1)">+1</button>
+<button onclick="addFuel('a2Fuel',-1)">-1</button>
 
-    <!-- STEP 5: Inactive 2 -->
-    <div class="step hidden" id="step-inactive2">
-      <div class="row3">
-        <div>
-          <label>Positioned for Shared Active?</label>
-          <select id="i2Pos">
-            <option value="Unknown">Unknown</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label>Hoarding / Corralling Impact</label>
-          <select id="i2Hoard">
-            <option value="Unknown">Unknown</option>
-            <option value="None">None</option>
-            <option value="Some">Some</option>
-            <option value="Significant">Significant</option>
-          </select>
-        </div>
-        <div>
-          <label>Lane Interference (during opp active)</label>
-          <select id="i2Lane">
-            <option value="Unknown">Unknown</option>
-            <option value="None">None</option>
-            <option value="Minor">Minor</option>
-            <option value="Major">Major</option>
-          </select>
-        </div>
-      </div>
+<div>Cycles</div>
+<div class="counter" id="a2Cycles">0</div>
+<button onclick="addFuel('a2Cycles',1)">+1 Cycle</button>
+<button onclick="addFuel('a2Cycles',-1)">-1 Cycle</button>
 
-      <div class="btnrow">
-        <button id="backToActive2Btn">← Back</button>
-        <button class="primary" id="toSharedBtn">Next → Shared Active</button>
-      </div>
-    </div>
+<button class="primary" onclick="nextStep('inactive2',true)">Next → Inactive 2</button>
+</div>
 
-    <!-- STEP 6: Shared Active -->
-    <div class="step hidden" id="step-shared">
-      <div class="row3">
-        <div>
-          <label>Cycles Completed (Shared Active)</label>
-          <select id="sCycles">
-            <option value="0">0</option><option value="1">1</option><option value="2" selected>2</option>
-            <option value="3">3</option><option value="4">4</option><option value="5+">5+</option>
-          </select>
-        </div>
-        <div>
-          <label>Fuel Scored (Shared Active)</label>
-          <input id="sFuel" inputmode="numeric" placeholder="0" />
-        </div>
-        <div>
-          <label>Time to First Score (Shared)</label>
-          <select id="sFirst">
-            <option value="0-3s">&lt;3s</option>
-            <option value="4-7s" selected>4-7s</option>
-            <option value="8-12s">8-12s</option>
-            <option value="13s+">13s+</option>
-            <option value="None">None</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-      </div>
+<div class="card hidden" id="inactive2">
+<h2>Inactive 2</h2>
 
-      <div class="row3">
-        <div>
-          <label>Composure Under Pressure (1–5)</label>
-          <select id="composureRating">
-            <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-          </select>
-        </div>
-        <div>
-          <label>Drive/Mechanism Cleanliness (1–5)</label>
-          <select id="cleanlinessRating">
-            <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-          </select>
-        </div>
-        <div>
-          <label>Notes later? (keep short)</label>
-          <select id="notesPrompt">
-            <option value="No" selected>No</option>
-            <option value="Yes">Yes</option>
-          </select>
-        </div>
-      </div>
+<select id="i2Action">
+<option>Hoarded</option>
+<option>Defense</option>
+<option>Both</option>
+<option>Neither</option>
+<option>Other</option>
+</select>
 
-      <div class="btnrow">
-        <button id="backToInactive2Btn">← Back</button>
-        <button class="primary" id="toEndgameBtn">Next → Endgame</button>
-      </div>
-    </div>
+<select id="i2Position">
+<option>Ended AZ</option>
+<option>Ended NZ</option>
+<option>Other</option>
+</select>
 
-    <!-- STEP 7: Endgame + Notes -->
-    <div class="step hidden" id="step-endgame">
-      <div class="row3">
-        <div>
-          <label>Climb Level</label>
-          <select id="climbLevel">
-            <option value="None">None</option>
-            <option value="Low">Low</option>
-            <option value="Mid">Mid</option>
-            <option value="High">High</option>
-          </select>
-        </div>
-        <div>
-          <label>Climb Success?</label>
-          <select id="climbSuccess">
-            <option value="N/A">N/A</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label>Climb Start Timing</label>
-          <select id="climbStart">
-            <option value="Unknown">Unknown</option>
-            <option value="Early (>=0:30)">Early (>=0:30)</option>
-            <option value="On-time (~0:20)">On-time (~0:20)</option>
-            <option value="Late (<=0:15)">Late (<=0:15)</option>
-          </select>
-        </div>
-      </div>
+<select id="i2Ready">
+<option>Ready to Shoot</option>
+<option>Not Ready</option>
+<option>Unknown</option>
+</select>
 
-      <div class="row3">
-        <div>
-          <label>Endgame Composure</label>
-          <select id="endgameComposure">
-            <option value="Unknown">Unknown</option>
-            <option value="Calm">Calm</option>
-            <option value="Slight Rush">Slight Rush</option>
-            <option value="Chaotic">Chaotic</option>
-          </select>
-        </div>
-        <div>
-          <label>Any Major Failure Mode?</label>
-          <select id="failureFlag">
-            <option value="None" selected>None</option>
-            <option value="Jam/Stall">Jam/Stall</option>
-            <option value="Vision/Aim">Vision/Aim</option>
-            <option value="Drivebase">Drivebase</option>
-            <option value="Climb">Climb</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label>Total Notes</label>
-          <select id="notesSize">
-            <option value="Short" selected>Short</option>
-            <option value="Detailed">Detailed</option>
-          </select>
-        </div>
-      </div>
+<button class="primary" onclick="nextStep('shared')">Next → Shared Active</button>
+</div>
 
-      <label>Notes (why / what happened / phase behaviors)</label>
-      <textarea id="notes" placeholder="Examples: ‘great NZ positioning during inactive’; ‘2 cycles in Active1 for 48’; ‘defense didn’t reduce throughput’; ‘late climb once’"></textarea>
+<div class="card hidden" id="shared">
+<h2>Shared Active</h2>
+<div>Fuel</div>
+<div class="counter" id="sFuel">0</div>
+<button onclick="addFuel('sFuel',5)">+5</button>
+<button onclick="addFuel('sFuel',1)">+1</button>
+<button onclick="addFuel('sFuel',-1)">-1</button>
 
-      <div class="btnrow">
-        <button id="backToSharedBtn">← Back</button>
-        <button class="primary" id="finishSaveBtn">Finish & Save</button>
-        <button id="cancelMatchBtn">Cancel Entry</button>
-      </div>
-      <div class="small muted">Saving will add one record to this iPad’s local database.</div>
-    </div>
-  </section>
+<div>Cycles</div>
+<div class="counter" id="sCycles">0</div>
+<button onclick="addFuel('sCycles',1)">+1 Cycle</button>
+<button onclick="addFuel('sCycles',-1)">-1 Cycle</button>
 
-  <!-- Saved Observations -->
-  <section class="card">
-    <h2>Saved Observations</h2>
-    <div class="btnrow" style="margin-bottom:10px;">
-      <button id="exportBtn">Export CSV</button>
-      <button id="copyCsvBtn">Copy CSV</button>
-      <button id="importBtn">Import CSV (Merge)</button>
-      <button class="danger" id="deleteAllBtn">Delete All (This iPad)</button>
-    </div>
+<button class="primary" onclick="nextStep('endgame',true)">Next → Endgame</button>
+</div>
 
-    <div class="small muted">
-      Offline workflow: each iPad exports CSV → AirDrop later → import into master spreadsheet.
-    </div>
+<div class="card hidden" id="endgame">
+<h2>Endgame</h2>
 
-    <div style="margin-top:10px; overflow:auto; max-height: 55vh;">
-      <table class="table" id="table">
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Match</th>
-            <th>Team</th>
-            <th>Auto</th>
-            <th>Active Windows</th>
-            <th>Inactive Windows</th>
-            <th>Endgame</th>
-            <th>Notes</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+<select id="endAction">
+<option>High Climb</option>
+<option>Mid Climb</option>
+<option>Low Climb</option>
+<option>Continued Shooting</option>
+<option>None</option>
+</select>
 
-    <div class="small muted" style="margin-top:10px;">
-      Data is stored locally in this browser. Export often.
-    </div>
-  </section>
-</main>
+<select id="endSuccess">
+<option>Success</option>
+<option>Failed</option>
+<option>N/A</option>
+</select>
 
-<input type="file" id="fileInput" accept=".csv,text/csv" style="display:none" />
+<div>Defense Impact (1–5)</div>
+<input type="number" id="defenseRating" min="1" max="5">
+
+<div>Driver Competency (1–5)</div>
+<input type="number" id="driverRating" min="1" max="5">
+
+<div>Robot Capability (1–5)</div>
+<input type="number" id="robotRating" min="1" max="5">
+
+<textarea id="notes" placeholder="Notes"></textarea>
+
+<button class="primary" onclick="saveMatch()">Save Match</button>
+</div>
 
 <script>
-  // ===== Storage =====
-  const STORAGE_KEY = "rebuilt_scout_v2";
-  let records = [];
+let currentStep = "setup";
 
-  function uid() {
-    return (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)).toUpperCase();
-  }
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      records = raw ? JSON.parse(raw) : [];
-    } catch (e) { records = []; }
-    renderTable();
-  }
-  function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    renderTable();
-  }
+function nextStep(step, reset=false){
+document.getElementById(currentStep).classList.add("hidden");
+if(reset){
+resetCounters();
+}
+document.getElementById(step).classList.remove("hidden");
+currentStep = step;
+}
 
-  // ===== Wizard State =====
-  const STEPS = [
-    { id: "setup", title: "Setup", hint: "Enter match + team once. Then follow phases in order." },
-    { id: "auto", title: "Auto", hint: "Log auto fuel, auto win (fuel only), and end position." },
-    { id: "active1", title: "Active 1", hint: "Log cycles + fuel + time to first score." },
-    { id: "inactive1", title: "Inactive 1", hint: "Log positioning / hoard / lane interference." },
-    { id: "active2", title: "Active 2", hint: "Log cycles + fuel + time to first score." },
-    { id: "inactive2", title: "Inactive 2", hint: "Log positioning / hoard / lane interference." },
-    { id: "shared", title: "Shared Active", hint: "Log cycles + fuel + time to first score." },
-    { id: "endgame", title: "Endgame", hint: "Log climb + composure + notes. Then save." }
-  ];
-  let stepIndex = 0;
+function addFuel(id, value){
+let el = document.getElementById(id);
+let num = parseInt(el.innerText);
+num += value;
+if(num < 0) num = 0;
+el.innerText = num;
+}
 
-  // Draft record (not saved until finish)
-  let draft = {};
+function resetCounters(){
+["a1Fuel","a1Cycles","a2Fuel","a2Cycles","sFuel","sCycles"].forEach(id=>{
+document.getElementById(id).innerText = 0;
+});
+}
 
-  function $(id){ return document.getElementById(id); }
-  function val(id){ return $(id).value.trim(); }
-  function setVal(id, v){ $(id).value = v; }
-
-  function showStep(idx){
-    stepIndex = idx;
-    const step = STEPS[idx];
-    $("stepTitle").textContent = step.title;
-    $("stepHint").textContent = step.hint;
-
-    // dots
-    const bar = $("stepbar");
-    bar.innerHTML = "";
-    STEPS.forEach((s, i) => {
-      const d = document.createElement("div");
-      d.className = "dot" + (i === idx ? " on" : "");
-      bar.appendChild(d);
-    });
-    const name = document.createElement("div");
-    name.className = "stepname";
-    name.textContent = step.title;
-    bar.appendChild(name);
-
-    // hide/show step panels
-    document.querySelectorAll(".step").forEach(el => el.classList.add("hidden"));
-    $("step-" + step.id).classList.remove("hidden");
-
-    // focus helpful field
-    if (step.id === "setup") $("matchNum").focus();
-    if (step.id === "auto") $("autoFuel").focus();
-    if (step.id === "active1") $("a1Fuel").focus();
-    if (step.id === "active2") $("a2Fuel").focus();
-    if (step.id === "shared") $("sFuel").focus();
-    if (step.id === "endgame") $("notes").focus();
-  }
-
-  function resetDraft(keepScoutEvent=true){
-    const scoutName = val("scoutName");
-    const eventName = val("eventName");
-
-    draft = { key: uid(), ts: new Date().toISOString() };
-
-    // reset fields
-    if (!keepScoutEvent) { setVal("scoutName",""); setVal("eventName",""); }
-    setVal("matchNum",""); setVal("teamNum",""); setVal("alliance","Red");
-
-    setVal("autoFuel","0"); setVal("autoWin","Unknown"); setVal("autoEndPos","NZ");
-    setVal("autoClimbAttempt","No"); setVal("autoClimbSuccess","N/A"); setVal("teleopStartPenalty","None");
-
-    setVal("a1Cycles","2"); setVal("a1Fuel","0"); setVal("a1First","4-7s");
-    setVal("i1Pos","Unknown"); setVal("i1Hoard","Unknown"); setVal("i1Lane","Unknown");
-
-    setVal("a2Cycles","2"); setVal("a2Fuel","0"); setVal("a2First","4-7s");
-    setVal("defFaced","Unknown"); setVal("defDrop","Unknown"); setVal("tempoRating","3");
-
-    setVal("i2Pos","Unknown"); setVal("i2Hoard","Unknown"); setVal("i2Lane","Unknown");
-
-    setVal("sCycles","2"); setVal("sFuel","0"); setVal("sFirst","4-7s");
-    setVal("composureRating","3"); setVal("cleanlinessRating","3"); setVal("notesPrompt","No");
-
-    setVal("climbLevel","None"); setVal("climbSuccess","N/A"); setVal("climbStart","Unknown");
-    setVal("endgameComposure","Unknown"); setVal("failureFlag","None"); setVal("notesSize","Short");
-    setVal("notes","");
-
-    // restore scout/event for speed
-    setVal("scoutName", scoutName);
-    setVal("eventName", eventName);
-
-    showStep(0);
-  }
-
-  function validateSetup(){
-    const matchNum = val("matchNum");
-    const teamNum  = val("teamNum");
-    if (!matchNum || !teamNum) return "Match # and Team # are required.";
-    if (!/^\d+$/.test(matchNum)) return "Match # must be numeric.";
-    if (!/^\d+$/.test(teamNum)) return "Team # must be numeric.";
-    return null;
-  }
-
-  // ===== Button wiring =====
-  $("startMatchBtn").addEventListener("click", () => {
-    const err = validateSetup();
-    if (err) { alert(err); return; }
-
-    draft.scoutName = val("scoutName");
-    draft.eventName = val("eventName");
-    draft.matchNum = Number(val("matchNum"));
-    draft.teamNum = Number(val("teamNum"));
-    draft.alliance = val("alliance");
-
-    showStep(1);
-  });
-
-  $("resetDraftBtn").addEventListener("click", () => {
-    if (!confirm("Reset this current entry? (Saved records unaffected)")) return;
-    resetDraft(true);
-  });
-
-  $("backToSetupBtn").addEventListener("click", ()=> showStep(0));
-
-  $("toActive1Btn").addEventListener("click", ()=>{
-    draft.autoFuel = Number(val("autoFuel") || "0");
-    draft.autoWin = val("autoWin");
-    draft.autoEndPos = val("autoEndPos");
-    draft.autoClimbAttempt = val("autoClimbAttempt");
-    draft.autoClimbSuccess = val("autoClimbSuccess");
-    draft.teleopStartPenalty = val("teleopStartPenalty");
-    showStep(2);
-  });
-
-  $("backToAutoBtn").addEventListener("click", ()=> showStep(1));
-
-  $("toInactive1Btn").addEventListener("click", ()=>{
-    draft.a1Cycles = val("a1Cycles");
-    draft.a1Fuel = Number(val("a1Fuel") || "0");
-    draft.a1First = val("a1First");
-    showStep(3);
-  });
-
-  $("backToActive1Btn").addEventListener("click", ()=> showStep(2));
-
-  $("toActive2Btn").addEventListener("click", ()=>{
-    draft.i1Pos = val("i1Pos");
-    draft.i1Hoard = val("i1Hoard");
-    draft.i1Lane = val("i1Lane");
-    showStep(4);
-  });
-
-  $("backToInactive1Btn").addEventListener("click", ()=> showStep(3));
-
-  $("toInactive2Btn").addEventListener("click", ()=>{
-    draft.a2Cycles = val("a2Cycles");
-    draft.a2Fuel = Number(val("a2Fuel") || "0");
-    draft.a2First = val("a2First");
-    draft.defFaced = val("defFaced");
-    draft.defDrop = val("defDrop");
-    draft.tempoRating = Number(val("tempoRating") || "0");
-    showStep(5);
-  });
-
-  $("backToActive2Btn").addEventListener("click", ()=> showStep(4));
-
-  $("toSharedBtn").addEventListener("click", ()=>{
-    draft.i2Pos = val("i2Pos");
-    draft.i2Hoard = val("i2Hoard");
-    draft.i2Lane = val("i2Lane");
-    showStep(6);
-  });
-
-  $("backToInactive2Btn").addEventListener("click", ()=> showStep(5));
-
-  $("toEndgameBtn").addEventListener("click", ()=>{
-    draft.sCycles = val("sCycles");
-    draft.sFuel = Number(val("sFuel") || "0");
-    draft.sFirst = val("sFirst");
-    draft.composureRating = Number(val("composureRating") || "0");
-    draft.cleanlinessRating = Number(val("cleanlinessRating") || "0");
-    draft.notesPrompt = val("notesPrompt");
-    showStep(7);
-  });
-
-  $("backToSharedBtn").addEventListener("click", ()=> showStep(6));
-
-  $("cancelMatchBtn").addEventListener("click", ()=>{
-    if (!confirm("Cancel this entry? Nothing will be saved.")) return;
-    resetDraft(true);
-  });
-
-  $("finishSaveBtn").addEventListener("click", ()=>{
-    // endgame fields
-    draft.climbLevel = val("climbLevel");
-    draft.climbSuccess = val("climbSuccess");
-    draft.climbStart = val("climbStart");
-    draft.endgameComposure = val("endgameComposure");
-    draft.failureFlag = val("failureFlag");
-    draft.notesSize = val("notesSize");
-    draft.notes = val("notes");
-    draft.ts = new Date().toISOString();
-
-    // derived convenience totals (safe for spreadsheet too)
-    draft.totalFuelTeleop = (draft.a1Fuel||0) + (draft.a2Fuel||0) + (draft.sFuel||0);
-    draft.totalFuelAll = (draft.autoFuel||0) + draft.totalFuelTeleop;
-
-    // basic sanity: if auto climb attempt is No, keep success N/A
-    if (draft.autoClimbAttempt === "No") draft.autoClimbSuccess = "N/A";
-    if (draft.climbLevel === "None") draft.climbSuccess = "N/A";
-
-    records.unshift(draft);
-    persist();
-    resetDraft(true);
-    alert("Saved!");
-  });
-
-  // ===== Table render =====
-  function escapeHtml(s) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
-  }
-
-  function renderTable(){
-    const tbody = $("tbody");
-    tbody.innerHTML = "";
-    for (const r of records.slice(0, 250)) {
-      const tr = document.createElement("tr");
-      const autoStr = `${r.autoFuel} fuel • win:${r.autoWin}<br><span class="muted">${r.autoEndPos}${r.autoClimbAttempt==="Yes" ? ` • autoClimb:${r.autoClimbSuccess}` : ""}</span>`;
-      const actStr =
-        `A1: ${r.a1Cycles} cyc / ${r.a1Fuel} fuel<br>` +
-        `A2: ${r.a2Cycles} cyc / ${r.a2Fuel} fuel<br>` +
-        `Sh: ${r.sCycles} cyc / ${r.sFuel} fuel<br>` +
-        `<span class="muted">Total teleop fuel: ${r.totalFuelTeleop ?? ""}</span>`;
-      const inactStr =
-        `I1: pos:${r.i1Pos}, hoard:${r.i1Hoard}, lane:${r.i1Lane}<br>` +
-        `I2: pos:${r.i2Pos}, hoard:${r.i2Hoard}, lane:${r.i2Lane}<br>` +
-        `<span class="muted">def:${r.defFaced}/${r.defDrop} • tempo:${r.tempoRating}</span>`;
-      const endStr =
-        `${r.climbLevel} • ${r.climbSuccess}<br><span class="muted">start:${r.climbStart} • ${r.endgameComposure}</span>`;
-
-      tr.innerHTML = `
-        <td class="mono">${r.key}</td>
-        <td>${r.matchNum}<br><span class="pill">${escapeHtml(r.alliance)}</span></td>
-        <td>${r.teamNum}</td>
-        <td>${autoStr}</td>
-        <td>${actStr}</td>
-        <td>${inactStr}</td>
-        <td>${endStr}</td>
-        <td>${escapeHtml((r.notes||"").slice(0,120))}${(r.notes||"").length>120?"…":""}</td>
-        <td><button data-del="${r.key}">Del</button></td>
-      `;
-      tbody.appendChild(tr);
-    }
-    tbody.querySelectorAll("button[data-del]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const k = btn.getAttribute("data-del");
-        records = records.filter(x => x.key !== k);
-        persist();
-      });
-    });
-  }
-
-  // ===== CSV =====
-  const CSV_HEADERS = [
-    "key","ts","scoutName","eventName","matchNum","teamNum","alliance",
-    "autoFuel","autoWin","autoEndPos","autoClimbAttempt","autoClimbSuccess","teleopStartPenalty",
-    "a1Cycles","a1Fuel","a1First",
-    "i1Pos","i1Hoard","i1Lane",
-    "a2Cycles","a2Fuel","a2First","defFaced","defDrop","tempoRating",
-    "i2Pos","i2Hoard","i2Lane",
-    "sCycles","sFuel","sFirst","composureRating","cleanlinessRating","notesPrompt",
-    "climbLevel","climbSuccess","climbStart","endgameComposure","failureFlag","notesSize",
-    "totalFuelTeleop","totalFuelAll",
-    "notes"
-  ];
-
-  function toCsvValue(val) {
-    const s = (val === null || val === undefined) ? "" : String(val);
-    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-    return s;
-  }
-  function exportCSVText() {
-    const lines = [];
-    lines.push(CSV_HEADERS.join(","));
-    for (const r of records) {
-      const row = CSV_HEADERS.map(h => toCsvValue(r[h]));
-      lines.push(row.join(","));
-    }
-    return lines.join("\n");
-  }
-  function download(filename, text) {
-    const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  $("exportBtn").addEventListener("click", () => {
-    const name = (val("eventName") || "rebuilt").replace(/[^\w\-]+/g,"_").slice(0,40);
-    download(`${name}_scouting_${new Date().toISOString().slice(0,10)}.csv`, exportCSVText());
-  });
-
-  $("copyCsvBtn").addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(exportCSVText());
-      alert("CSV copied. Paste into Notes/Sheets later.");
-    } catch (e) {
-      alert("Clipboard copy failed (iOS permissions). Use Export CSV.");
-    }
-  });
-
-  $("importBtn").addEventListener("click", () => $("fileInput").click());
-
-  $("fileInput").addEventListener("change", async (ev) => {
-    const file = ev.target.files && ev.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const imported = parseCSV(text);
-    if (!imported.length) { alert("No records found."); return; }
-
-    const existingKeys = new Set(records.map(r => r.key));
-    let added = 0;
-    for (const r of imported) {
-      if (!r.key || existingKeys.has(r.key)) continue;
-      records.push(r);
-      existingKeys.add(r.key);
-      added++;
-    }
-    records.sort((a,b) => (a.ts < b.ts ? 1 : -1));
-    persist();
-    alert(`Imported ${imported.length} rows, added ${added} new.`);
-    ev.target.value = "";
-  });
-
-  function parseCSV(text) {
-    const rows = [];
-    let i = 0, field = "", row = [], inQuotes = false;
-
-    function pushField(){ row.push(field); field=""; }
-    function pushRow(){ rows.push(row); row=[]; }
-
-    while (i < text.length) {
-      const ch = text[i];
-      if (inQuotes) {
-        if (ch === '"') {
-          if (text[i+1] === '"') { field += '"'; i += 2; continue; }
-          inQuotes = false; i++; continue;
-        } else { field += ch; i++; continue; }
-      } else {
-        if (ch === '"') { inQuotes = true; i++; continue; }
-        if (ch === ",") { pushField(); i++; continue; }
-        if (ch === "\n") { pushField(); pushRow(); i++; continue; }
-        if (ch === "\r") { i++; continue; }
-        field += ch; i++; continue;
-      }
-    }
-    pushField();
-    if (row.length > 1 || row[0] !== "") pushRow();
-
-    if (!rows.length) return [];
-    const headers = rows[0].map(h => h.trim());
-    const out = [];
-    for (const r of rows.slice(1)) {
-      const obj = {};
-      for (let c=0; c<headers.length; c++) obj[headers[c]] = r[c] ?? "";
-      // normalize common numeric fields
-      ["matchNum","teamNum","autoFuel","a1Fuel","a2Fuel","sFuel","tempoRating","composureRating","cleanlinessRating","totalFuelTeleop","totalFuelAll"]
-        .forEach(k => obj[k] = Number(obj[k] || "0"));
-      out.push(obj);
-    }
-    return out;
-  }
-
-  $("deleteAllBtn").addEventListener("click", () => {
-    if (!confirm("Delete ALL scouting data on this iPad? (Export first!)")) return;
-    records = [];
-    persist();
-  });
-
-  // Init
-  load();
-  resetDraft(true);
+function saveMatch(){
+alert("Match saved (add CSV logic here)");
+location.reload();
+}
 </script>
+
 </body>
 </html>
