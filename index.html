@@ -15,9 +15,9 @@
     }
     h1 { font-size: 16px; margin: 0 0 6px; }
     .sub { font-size: 12px; opacity: 0.75; }
-    main { padding: 12px; max-width: 1020px; margin: 0 auto; }
+    main { padding: 12px; max-width: 1060px; margin: 0 auto; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 960px) { .grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1fr 1fr; } }
 
     .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 12px; }
     .card h2 { font-size: 14px; margin: 0 0 8px; }
@@ -40,7 +40,7 @@
 
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-    @media (max-width: 560px) { .row, .row3 { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .row, .row3 { grid-template-columns: 1fr; } }
 
     .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     button {
@@ -50,6 +50,7 @@
       background: rgba(255,255,255,0.10);
       color: #e8eefc;
       font-size: 16px;
+      cursor: pointer;
     }
     button.primary { background: #2b6cff; border-color: rgba(255,255,255,0.25); }
     button.danger { background: rgba(255,80,80,0.25); }
@@ -63,7 +64,7 @@
     .hidden { display:none !important; }
 
     .counterWrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    @media (max-width: 560px) { .counterWrap { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .counterWrap { grid-template-columns: 1fr; } }
     .counterCard {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.10);
@@ -73,7 +74,7 @@
     .bigNum { font-size: 44px; line-height: 1.05; font-weight: 700; letter-spacing: 0.5px; }
     .btnGrid { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
     .btnGrid button { flex: 1 1 120px; }
-    .btnGrid .smallBtn { flex: 1 1 80px; opacity: 0.95; }
+    .btnGrid .smallBtn { flex: 1 1 90px; opacity: 0.95; }
     .btnGrid .dangerBtn { background: rgba(255,80,80,0.22); border-color: rgba(255,255,255,0.18); }
     .btnGrid .resetBtn { background: rgba(255,255,255,0.08); opacity: 0.9; }
 
@@ -81,6 +82,25 @@
     .table th, .table td { border-bottom: 1px solid rgba(255,255,255,0.10); padding: 8px 6px; vertical-align: top; }
     .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.10); font-size: 12px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Simple modal */
+    .modalBackdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      padding: 16px;
+    }
+    .modalPanel {
+      max-width: 720px;
+      margin: 20px auto;
+      background: #0b0f19;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .modalHeader {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
   </style>
 </head>
 
@@ -88,7 +108,7 @@
 <header>
   <div>
     <h1>Rebuilt Scouting (Offline)</h1>
-    <div class="sub">Wizard flow • Tap counters • Offline storage • Export/Import CSV</div>
+    <div class="sub">Wizard flow • Tap counters • Offline storage • CSV + QR transfer</div>
   </div>
   <div class="stepbar" id="stepbar"></div>
 </header>
@@ -206,7 +226,7 @@
             <button class="resetBtn smallBtn" id="a1CycReset">Reset</button>
           </div>
           <div class="small muted">
-            Define a cycle consistently: intake → score → disengage.
+            Cycle = intake → score → disengage (don’t count partial dumps as new cycles).
           </div>
         </div>
       </div>
@@ -278,9 +298,6 @@
             <button class="dangerBtn" id="a2CycMinus">-1 Cycle</button>
             <button class="resetBtn smallBtn" id="a2CycReset">Reset</button>
           </div>
-          <div class="small muted">
-            If they “partial score” without leaving, don’t count as a new cycle.
-          </div>
         </div>
       </div>
 
@@ -351,7 +368,6 @@
             <button class="dangerBtn" id="sCycMinus">-1 Cycle</button>
             <button class="resetBtn smallBtn" id="sCycReset">Reset</button>
           </div>
-          <div class="small muted">This window is usually “playoff chaos.” Record cleanly.</div>
         </div>
       </div>
 
@@ -414,7 +430,7 @@
         </div>
       </div>
 
-      <label>Notes (short, important)</label>
+      <label>Notes (keep short — QR has size limits)</label>
       <textarea id="notes" placeholder="Examples: ‘great hoard’; ‘defense slowed cycles’; ‘climb shaky’; ‘jam once’"></textarea>
 
       <div class="btnrow">
@@ -433,11 +449,13 @@
       <button id="exportBtn">Export CSV</button>
       <button id="copyCsvBtn">Copy CSV</button>
       <button id="importBtn">Import CSV (Merge)</button>
+      <button id="showQrBtn">Show QR (Last Saved)</button>
+      <button id="scanQrBtn">Scan QR (Import)</button>
       <button class="danger" id="deleteAllBtn">Delete All (This Device)</button>
     </div>
 
     <div class="small muted">
-      Offline workflow: each iPad exports CSV → AirDrop later → import into master spreadsheet.
+      QR workflow: each scout saves → shows QR → master scans/imports → master exports one CSV later.
     </div>
 
     <div style="margin-top:10px; overflow:auto; max-height: 58vh;">
@@ -468,10 +486,49 @@
 
 <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none" />
 
+<!-- QR SHOW MODAL -->
+<div id="qrModal" class="modalBackdrop hidden" aria-hidden="true">
+  <div class="modalPanel">
+    <div class="modalHeader">
+      <div>
+        <div style="font-weight:700;">Show QR (Last Saved Match)</div>
+        <div class="small muted" id="qrMeta"></div>
+      </div>
+      <button id="qrCloseBtn">Close</button>
+    </div>
+    <div style="margin-top:12px; display:flex; justify-content:center;">
+      <div id="qrBox" style="padding:12px; background:white; border-radius:12px;"></div>
+    </div>
+    <div class="small muted" style="margin-top:10px;">
+      Scan this with the Master device → “Scan QR (Import)”.
+    </div>
+  </div>
+</div>
+
+<!-- QR SCAN MODAL -->
+<div id="scanModal" class="modalBackdrop hidden" aria-hidden="true">
+  <div class="modalPanel">
+    <div class="modalHeader">
+      <div>
+        <div style="font-weight:700;">Scan QR (Import)</div>
+        <div class="small muted">Point camera at a scout’s QR to import one match record.</div>
+      </div>
+      <button id="scanCloseBtn">Close</button>
+    </div>
+    <div id="reader" style="margin-top:12px;"></div>
+    <div class="small muted" id="scanStatus" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- QR libraries (must exist in repo root for offline use) -->
+<script src="./qrcode.min.js"></script>
+<script src="./html5-qrcode.min.js"></script>
+
 <script>
   // ===== Storage =====
-  const STORAGE_KEY = "rebuilt_scout_v3";
+  const STORAGE_KEY = "rebuilt_scout_v4";
   let records = [];
+  let lastSavedRecord = null;
 
   function uid() {
     return (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)).toUpperCase();
@@ -504,6 +561,7 @@
 
   let stepIndex = 0;
   let draft = {};
+  let html5Qr = null;
 
   const $ = (id) => document.getElementById(id);
 
@@ -550,22 +608,18 @@
     if (!keepScoutEvent) { $("scoutName").value = ""; $("eventName").value = ""; }
     $("matchNum").value = ""; $("teamNum").value = ""; $("alliance").value = "Red";
 
-    // auto selects defaults
     $("autoWin").value = "Unknown";
     $("autoEndPos").value = "NZ";
     $("autoAction").value = "None";
     setNumEl("autoFuelNum", 0);
 
-    // actives reset
     resetActiveCounters("a1");
     resetActiveCounters("a2");
     resetActiveCounters("s");
 
-    // inactive defaults
     $("i1Action").value = "Unknown"; $("i1EndPos").value = "Unknown"; $("i1Ready").value = "Unknown";
     $("i2Action").value = "Unknown"; $("i2EndPos").value = "Unknown"; $("i2Ready").value = "Unknown";
 
-    // endgame defaults
     $("endAction").value = "None";
     $("endSuccess").value = "N/A";
     $("defApplicable").value = "Unknown";
@@ -574,7 +628,6 @@
     $("robotRating").value = "3";
     $("notes").value = "";
 
-    // restore scout/event
     $("scoutName").value = scout;
     $("eventName").value = event;
 
@@ -590,7 +643,7 @@
     return null;
   }
 
-  // ===== Button wiring =====
+  // ===== Wizard wiring =====
   $("startMatchBtn").addEventListener("click", () => {
     const err = validateSetup();
     if (err) return alert(err);
@@ -634,7 +687,6 @@
   $("a1Plus1").addEventListener("click", () => addToEl("a1FuelNum", 1));
   $("a1Minus1").addEventListener("click", () => addToEl("a1FuelNum", -1));
   $("a1Reset").addEventListener("click", () => setNumEl("a1FuelNum", 0));
-
   $("a1CycPlus").addEventListener("click", () => addToEl("a1CyclesNum", 1));
   $("a1CycMinus").addEventListener("click", () => addToEl("a1CyclesNum", -1));
   $("a1CycReset").addEventListener("click", () => setNumEl("a1CyclesNum", 0));
@@ -644,7 +696,6 @@
   $("a2Plus1").addEventListener("click", () => addToEl("a2FuelNum", 1));
   $("a2Minus1").addEventListener("click", () => addToEl("a2FuelNum", -1));
   $("a2Reset").addEventListener("click", () => setNumEl("a2FuelNum", 0));
-
   $("a2CycPlus").addEventListener("click", () => addToEl("a2CyclesNum", 1));
   $("a2CycMinus").addEventListener("click", () => addToEl("a2CyclesNum", -1));
   $("a2CycReset").addEventListener("click", () => setNumEl("a2CyclesNum", 0));
@@ -654,19 +705,17 @@
   $("sPlus1").addEventListener("click", () => addToEl("sFuelNum", 1));
   $("sMinus1").addEventListener("click", () => addToEl("sFuelNum", -1));
   $("sReset").addEventListener("click", () => setNumEl("sFuelNum", 0));
-
   $("sCycPlus").addEventListener("click", () => addToEl("sCyclesNum", 1));
   $("sCycMinus").addEventListener("click", () => addToEl("sCyclesNum", -1));
   $("sCycReset").addEventListener("click", () => setNumEl("sCyclesNum", 0));
 
-  // Next buttons (with auto-reset between windows)
+  // Next buttons (auto-reset between actives)
   $("toActive1Btn").addEventListener("click", () => {
     draft.autoFuel = numFromEl("autoFuelNum");
     draft.autoWin = $("autoWin").value;
     draft.autoEndPos = $("autoEndPos").value;
     draft.autoAction = $("autoAction").value;
 
-    // ensure active1 starts at 0
     resetActiveCounters("a1");
     showStep(2);
   });
@@ -682,7 +731,6 @@
     draft.i1EndPos = $("i1EndPos").value;
     draft.i1Ready = $("i1Ready").value;
 
-    // ensure active2 starts at 0
     resetActiveCounters("a2");
     showStep(4);
   });
@@ -698,7 +746,6 @@
     draft.i2EndPos = $("i2EndPos").value;
     draft.i2Ready = $("i2Ready").value;
 
-    // ensure shared starts at 0
     resetActiveCounters("s");
     showStep(6);
   });
@@ -723,10 +770,10 @@
     // derived totals
     draft.totalFuelTeleop = (Number(draft.a1Fuel)||0) + (Number(draft.a2Fuel)||0) + (Number(draft.sFuel)||0);
     draft.totalFuelAll = (Number(draft.autoFuel)||0) + draft.totalFuelTeleop;
-
     draft.totalCyclesTeleop = (Number(draft.a1Cycles)||0) + (Number(draft.a2Cycles)||0) + (Number(draft.sCycles)||0);
 
     records.unshift(draft);
+    lastSavedRecord = draft; // used for QR show
     persist();
     resetDraft(true);
     alert("Saved!");
@@ -862,7 +909,6 @@
   });
 
   function parseCSV(text) {
-    // minimal CSV parser (quotes/commas/newlines)
     const rows = [];
     let i = 0, field = "", row = [], inQuotes = false;
 
@@ -894,7 +940,6 @@
       const obj = {};
       for (let c=0; c<headers.length; c++) obj[headers[c]] = r[c] ?? "";
 
-      // normalize numerics
       const nums = ["matchNum","teamNum","autoFuel","a1Fuel","a1Cycles","a2Fuel","a2Cycles","sFuel","sCycles",
                     "defenseRating","driverRating","robotRating","totalFuelTeleop","totalFuelAll","totalCyclesTeleop"];
       nums.forEach(k => obj[k] = Number(obj[k] || "0"));
@@ -909,6 +954,119 @@
     records = [];
     persist();
   });
+
+  // ===== QR Transfer (per-match) =====
+  function closeQrModal() {
+    $("qrModal").classList.add("hidden");
+    $("qrBox").innerHTML = "";
+  }
+
+  function openQrModalForLast() {
+    if (!lastSavedRecord) {
+      alert("No saved match yet on this device.");
+      return;
+    }
+    if (typeof QRCode === "undefined") {
+      alert("QR library missing. Ensure qrcode.min.js is in the same folder as index.html.");
+      return;
+    }
+
+    const payloadObj = { t: "rebuilt_scout_record", v: 1, record: lastSavedRecord };
+    const payload = JSON.stringify(payloadObj);
+
+    // Practical limit: keep this small for reliable scans
+    if (payload.length > 2200) {
+      alert("Record too large for a reliable single QR. Shorten notes and try again.");
+      return;
+    }
+
+    $("qrMeta").textContent = `Match ${lastSavedRecord.matchNum} • Team ${lastSavedRecord.teamNum} • Key ${lastSavedRecord.key}`;
+    $("qrBox").innerHTML = "";
+
+    // Generate QR
+    new QRCode($("qrBox"), {
+      text: payload,
+      width: 320,
+      height: 320,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    $("qrModal").classList.remove("hidden");
+  }
+
+  async function closeScanModal() {
+    try {
+      if (html5Qr) {
+        await html5Qr.stop();
+        await html5Qr.clear();
+      }
+    } catch (_) {}
+    html5Qr = null;
+
+    $("scanModal").classList.add("hidden");
+    $("scanStatus").textContent = "";
+    $("reader").innerHTML = "";
+  }
+
+  function tryImportQrPayload(text) {
+    let obj;
+    try {
+      obj = JSON.parse(text);
+    } catch {
+      alert("QR did not contain valid JSON.");
+      return;
+    }
+
+    if (!obj || obj.t !== "rebuilt_scout_record" || !obj.record || !obj.record.key) {
+      alert("QR is not a valid Rebuilt scouting record.");
+      return;
+    }
+
+    const rec = obj.record;
+
+    // Merge by key
+    if (records.some(r => r.key === rec.key)) {
+      alert("Record already exists (duplicate).");
+      return;
+    }
+
+    records.unshift(rec);
+    persist();
+    alert(`Imported: Match ${rec.matchNum} • Team ${rec.teamNum}`);
+  }
+
+  async function openScanModal() {
+    if (typeof Html5Qrcode === "undefined") {
+      alert("Scanner library missing. Ensure html5-qrcode.min.js is in the same folder as index.html.");
+      return;
+    }
+
+    $("scanModal").classList.remove("hidden");
+    $("scanStatus").textContent = "Starting camera…";
+
+    // Create scanner
+    html5Qr = new Html5Qrcode("reader");
+    try {
+      await html5Qr.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 260 },
+        (decodedText) => {
+          tryImportQrPayload(decodedText);
+          closeScanModal();
+        },
+        () => {}
+      );
+      $("scanStatus").textContent = "Scanning…";
+    } catch (e) {
+      console.error(e);
+      $("scanStatus").textContent = "Camera failed to start. Check permissions (HTTPS + allow camera).";
+    }
+  }
+
+  $("showQrBtn").addEventListener("click", openQrModalForLast);
+  $("scanQrBtn").addEventListener("click", openScanModal);
+  $("qrCloseBtn").addEventListener("click", closeQrModal);
+  $("scanCloseBtn").addEventListener("click", closeScanModal);
 
   // Init
   load();
